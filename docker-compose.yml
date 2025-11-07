@@ -1,0 +1,104 @@
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.4.7
+    container_name: task-scheduler-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-task_scheduler}
+      MYSQL_USER: ${DB_USER:-taskuser}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-taskpass123}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - task-scheduler-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # Redis Service (for job queue and caching)
+  redis:
+    image: redis:7-alpine
+    container_name: task-scheduler-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - task-scheduler-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  # NestJS Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: task-scheduler-backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      RUN_SETUP: ${RUN_SETUP:-true}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-task_scheduler}
+      DB_USER: ${DB_USER:-taskuser}
+      DB_PASSWORD: ${DB_PASSWORD:-taskpass123}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-15m}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PORT: ${BACKEND_PORT:-3000}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      - ./backend/package.json:/app/package.json
+      - ./backend/config:/app/config
+    networks:
+      - task-scheduler-network
+    command: npm run start:dev
+    restart: unless-stopped
+
+  # Vue.js Frontend Service (Production with Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000/api}
+    container_name: task-scheduler-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+    networks:
+      - task-scheduler-network
+    restart: unless-stopped
+
+networks:
+  task-scheduler-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local

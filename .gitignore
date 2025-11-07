@@ -1,0 +1,15 @@
+node_modules/
+.env
+.DS_Store
+dist/
+logs/
+*.log
+
+# Test coverage reports
+coverage/
+backend/coverage/
+frontend/coverage/
+
+# Test results
+test-results/
+junit.xml
