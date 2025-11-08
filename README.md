@@ -7,22 +7,6 @@ A lightweight internal task scheduling platform where managers can create and as
 ### Prerequisites
 - Node.js 20+ (for local development)
 
-### Default Admin Credentials
-- **Email**: `admin@example.com`
-- **Password**: `123456`
-
-### Initial Data
-The application automatically seeds the database with test user accounts from `backend/config/initial-data.json`:
-
-| Role | Email | Name | Password |
-|------|-------|------|----------|
-| 👑 Admin | `admin@example.com` | Admin User | `123456` |
-| 👔 Manager | `manager1@example.com` | Manager One | `123456` |
-| 👔 Manager | `manager2@example.com` | Manager Two | `123456` |
-| 👤 User | `user1@example.com` | User One | `123456` |
-| 👤 User | `user2@example.com` | User Two | `123456` |
-
-**All accounts share the same password: `123456`**
 
 ### Build from Source
 
@@ -47,6 +31,20 @@ The application automatically seeds the database with test user accounts from `b
    - **Frontend**: http://localhost:5173
    - **Backend API**: http://localhost:3000/api
    - **Health Check**: http://localhost:3000/health
+
+
+
+### Initial Data
+The application automatically seeds the database with test user accounts from `backend/config/initial-data.json`:
+
+| Role | Email | Name | Password |
+|------|-------|------|----------|
+| 👑 Admin | `admin@example.com` | Admin User | `123456` |
+| 👔 Manager | `manager1@example.com` | Manager One | `123456` |
+| 👔 Manager | `manager2@example.com` | Manager Two | `123456` |
+| 👤 User | `user1@example.com` | User One | `123456` |
+| 👤 User | `user2@example.com` | User Two | `123456` |
+
 
 ## 🧪 Testing
 
